@@ -8,7 +8,7 @@ from typing import Any
 
 from dotenv import load_dotenv
 from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import Qdrant
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -20,13 +20,14 @@ import truststore
 @dataclass(frozen=True)
 class RAGConfig:
     pdf_path: Path = Path("data/CKS-Style-Conditions.pdf")
-    index_dir: Path = Path("vectorstore/cks_faiss")
+    index_dir: Path = Path("vectorstore/cks_qdrant")
     embeddings_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     chunk_size: int = 1200
     chunk_overlap: int = 200
     retrieval_k: int = 5
     min_relevance_score: float = 0.2
     llm_model: str = "llama-3.1-8b-instant"
+    collection_name: str = "cks_conditions"
 
 
 def setup_environment() -> str:
@@ -88,24 +89,28 @@ def build_embeddings(config: RAGConfig) -> HuggingFaceEmbeddings:
     return HuggingFaceEmbeddings(model_name=config.embeddings_model)
 
 
-def build_and_save_index(chunks: list[Document], config: RAGConfig) -> FAISS:
+def build_and_save_index(chunks: list[Document], config: RAGConfig) -> Qdrant:
     embeddings = build_embeddings(config)
-    vectorstore = FAISS.from_documents(chunks, embeddings)
     config.index_dir.mkdir(parents=True, exist_ok=True)
-    vectorstore.save_local(str(config.index_dir))
+    vectorstore = Qdrant.from_documents(
+        documents=chunks,
+        embedding=embeddings,
+        path=str(config.index_dir),
+        collection_name=config.collection_name,
+    )
     return vectorstore
 
 
-def load_saved_index(config: RAGConfig) -> FAISS:
+def load_saved_index(config: RAGConfig) -> Qdrant:
     embeddings = build_embeddings(config)
-    return FAISS.load_local(
-        str(config.index_dir),
-        embeddings,
-        allow_dangerous_deserialization=True,
+    return Qdrant.from_existing_collection(
+        embedding=embeddings,
+        path=str(config.index_dir),
+        collection_name=config.collection_name,
     )
 
 
-def get_or_create_index(config: RAGConfig, rebuild: bool = False) -> tuple[FAISS, str]:
+def get_or_create_index(config: RAGConfig, rebuild: bool = False) -> tuple[Qdrant, str]:
     if config.index_dir.exists() and not rebuild:
         return load_saved_index(config), "loaded"
 
@@ -126,7 +131,7 @@ def _format_sources(docs: list[Document]) -> list[str]:
 
 
 def _extract_retrieved_docs(
-    vectorstore: FAISS,
+    vectorstore: Qdrant,
     query: str,
     config: RAGConfig,
 ) -> list[Document]:
@@ -141,7 +146,7 @@ def _extract_retrieved_docs(
 
 
 def answer_with_rag(
-    vectorstore: FAISS,
+    vectorstore: Qdrant,
     question: str,
     config: RAGConfig,
 ) -> dict[str, Any]:

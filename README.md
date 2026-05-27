@@ -6,10 +6,10 @@ Minimal production-ready RAG chatbot grounded in one PDF: `data/CKS-Style-Condit
 
 - `streamlit`
 - `langchain`, `langchain-core`, `langchain-text-splitters`
-- `langchain-community` (`PyPDFLoader`, `DirectoryLoader`, `FAISS`)
+- `langchain-community` (`PyPDFLoader`, `DirectoryLoader`, `Qdrant`)
 - `langchain-huggingface` (`sentence-transformers/all-MiniLM-L6-v2`)
 - `langchain-groq` (`ChatGroq`)
-- `faiss-cpu`
+- `qdrant-client`
 - `python-dotenv`
 - `truststore`
 - `uv`
@@ -28,7 +28,7 @@ Minimal production-ready RAG chatbot grounded in one PDF: `data/CKS-Style-Condit
 ## Behavior
 
 - Uses one PDF only for retrieval context.
-- Builds FAISS index at `vectorstore/cks_faiss/` on first run and reuses it later.
+- Builds Qdrant index at `vectorstore/cks_qdrant/` on first run and reuses it later.
 - If context is insufficient, it explicitly says it cannot answer from the document.
 - Shows page-based source snippets for each answer.
 
@@ -38,4 +38,4 @@ Minimal production-ready RAG chatbot grounded in one PDF: `data/CKS-Style-Condit
 2. Set `GROQ_API_KEY` in app secrets.
 3. App entrypoint: `app.py`.
 
-Note: `FAISS.load_local(..., allow_dangerous_deserialization=True)` is used for loading locally persisted trusted index files.
+Note: local Qdrant persistence is used through `qdrant-client` path storage.

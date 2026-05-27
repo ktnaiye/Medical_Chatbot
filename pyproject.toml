@@ -14,7 +14,7 @@ dependencies = [
   "langchain-community==0.2.16",
   "langchain-huggingface==0.0.3",
   "langchain-groq==0.1.9",
-  "faiss-cpu==1.8.0.post1",
+  "qdrant-client==1.10.1",
   "pypdf==4.3.1",
 ]
 

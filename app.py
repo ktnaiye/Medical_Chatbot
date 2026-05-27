@@ -6,7 +6,7 @@ from rag import RAGConfig, answer_with_rag, get_or_create_index, setup_environme
 
 st.set_page_config(page_title="UK Clinical RAG Chatbot", page_icon=":stethoscope:")
 st.title("UK Clinical RAG Chatbot")
-st.caption("Grounded QA over a single clinical PDF using LangChain + FAISS + Groq.")
+st.caption("Grounded QA over a single clinical PDF using LangChain + Qdrant + Groq.")
 
 config = RAGConfig()
 
@@ -14,10 +14,15 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 
-def initialize_rag(rebuild: bool = False) -> tuple[bool, str]:
+@st.cache_resource(show_spinner=False)
+def load_shared_vectorstore() -> tuple[object, str]:
+    setup_environment()
+    return get_or_create_index(config, rebuild=False)
+
+
+def initialize_rag() -> tuple[bool, str]:
     try:
-        setup_environment()
-        index, status = get_or_create_index(config, rebuild=rebuild)
+        index, status = load_shared_vectorstore()
         st.session_state.vectorstore = index
         return True, status
     except Exception as exc:
@@ -26,7 +31,7 @@ def initialize_rag(rebuild: bool = False) -> tuple[bool, str]:
 
 
 if "vectorstore" not in st.session_state:
-    ok, _status = initialize_rag(rebuild=False)
+    ok, _status = initialize_rag()
     if not ok:
         st.error(st.session_state.get("init_error", "Failed to initialize."))
         st.stop()
