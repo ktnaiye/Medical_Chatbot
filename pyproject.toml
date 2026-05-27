@@ -1,0 +1,22 @@
+[project]
+name = "chatbot-medical-rag"
+version = "0.1.0"
+description = "Minimal Streamlit RAG chatbot grounded in a single UK clinical PDF."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "streamlit==1.45.1",
+  "python-dotenv==1.0.1",
+  "truststore==0.10.0",
+  "langchain==0.2.16",
+  "langchain-core==0.2.38",
+  "langchain-text-splitters==0.2.2",
+  "langchain-community==0.2.16",
+  "langchain-huggingface==0.0.3",
+  "langchain-groq==0.1.9",
+  "faiss-cpu==1.8.0.post1",
+  "pypdf==4.3.1",
+]
+
+[tool.uv]
+package = false
